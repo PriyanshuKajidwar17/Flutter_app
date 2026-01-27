@@ -1,23 +1,51 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-class NextPage extends StatefulWidget {
-  const NextPage({super.key});
+class NextPageWithTheme extends StatefulWidget {
+  final ValueNotifier<ThemeMode> themeModeNotifier;
+  const NextPageWithTheme({super.key, required this.themeModeNotifier});
 
   @override
-  State<NextPage> createState() => _NextPageState();
+  State<NextPageWithTheme> createState() => _NextPageWithThemeState();
 }
 
-class _NextPageState extends State<NextPage> {
+class _NextPageWithThemeState extends State<NextPageWithTheme> {
   final _formKey = GlobalKey<FormState>();
 
-  final TextEditingController nameController = TextEditingController();
-  final TextEditingController ageController = TextEditingController();
-  final TextEditingController contactController = TextEditingController();
-  final TextEditingController courseController = TextEditingController();
+  final nameController = TextEditingController();
+  final ageController = TextEditingController();
+  final contactController = TextEditingController();
+  final courseController = TextEditingController();
 
-  final List<Map<String, String>> students = [];
+  List<Map<String, String>> students = [];
 
-  void _addStudent() {
+  @override
+  void initState() {
+    super.initState();
+    _loadStudents(); // Load saved data
+  }
+
+  Future<void> _saveStudents() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList(
+      'students',
+      students.map((e) => jsonEncode(e)).toList(),
+    );
+  }
+
+  Future<void> _loadStudents() async {
+    final prefs = await SharedPreferences.getInstance();
+    final list = prefs.getStringList('students');
+    if (list != null) {
+      setState(() {
+        students =
+            list.map((e) => Map<String, String>.from(jsonDecode(e))).toList();
+      });
+    }
+  }
+
+  void _addStudent() async {
     if (_formKey.currentState!.validate()) {
       setState(() {
         students.add({
@@ -27,8 +55,7 @@ class _NextPageState extends State<NextPage> {
           'course': courseController.text,
         });
       });
-
-      // Clear fields
+      await _saveStudents();
       nameController.clear();
       ageController.clear();
       contactController.clear();
@@ -36,23 +63,53 @@ class _NextPageState extends State<NextPage> {
     }
   }
 
+  void _deleteStudent(int index) async {
+    setState(() {
+      students.removeAt(index);
+    });
+    await _saveStudents();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Student Form"),
+        actions: [
+          IconButton(
+            icon: Icon(widget.themeModeNotifier.value == ThemeMode.light
+                ? Icons.dark_mode
+                : Icons.light_mode),
+            onPressed: () {
+              widget.themeModeNotifier.value =
+              widget.themeModeNotifier.value == ThemeMode.light
+                  ? ThemeMode.dark
+                  : ThemeMode.light;
+            },
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            const Text(
-              "Add Student Details",
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+            /// Header with Logo
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  "Add Student Details",
+                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                ),
+                Image.asset(
+                  'assets/images/students.png',
+                  height: 45,
+                ),
+              ],
             ),
             const SizedBox(height: 16),
 
-            /// -------- FORM --------
+            /// Form
             Form(
               key: _formKey,
               child: Column(
@@ -60,89 +117,94 @@ class _NextPageState extends State<NextPage> {
                   TextFormField(
                     controller: nameController,
                     decoration: const InputDecoration(
-                      labelText: "Student Name",
-                      border: OutlineInputBorder(),
-                    ),
+                        labelText: "Student Name",
+                        border: OutlineInputBorder()),
                     validator: (value) =>
-                    value!.isEmpty ? "Enter name" : null,
+                    value == null || value.length < 3
+                        ? "Enter valid name"
+                        : null,
                   ),
                   const SizedBox(height: 10),
-
                   TextFormField(
                     controller: ageController,
                     keyboardType: TextInputType.number,
                     decoration: const InputDecoration(
-                      labelText: "Age",
-                      border: OutlineInputBorder(),
-                    ),
-                    validator: (value) =>
-                    value!.isEmpty ? "Enter age" : null,
+                        labelText: "Age",
+                        border: OutlineInputBorder()),
+                    validator: (value) {
+                      int? age = int.tryParse(value ?? "");
+                      if (age == null || age < 1 || age > 100) {
+                        return "Enter valid age (1-100)";
+                      }
+                      return null;
+                    },
                   ),
                   const SizedBox(height: 10),
-
                   TextFormField(
                     controller: contactController,
                     keyboardType: TextInputType.phone,
                     decoration: const InputDecoration(
-                      labelText: "Contact Number",
-                      border: OutlineInputBorder(),
-                    ),
+                        labelText: "Contact Number",
+                        border: OutlineInputBorder()),
                     validator: (value) =>
-                    value!.isEmpty ? "Enter contact number" : null,
+                    value == null || value.length != 10
+                        ? "Enter 10 digit number"
+                        : null,
                   ),
                   const SizedBox(height: 10),
-
                   TextFormField(
                     controller: courseController,
                     decoration: const InputDecoration(
-                      labelText: "Course Name",
-                      border: OutlineInputBorder(),
-                    ),
+                        labelText: "Course Name",
+                        border: OutlineInputBorder()),
                     validator: (value) =>
-                    value!.isEmpty ? "Enter course name" : null,
+                    value == null || value.isEmpty
+                        ? "Course required"
+                        : null,
                   ),
                   const SizedBox(height: 15),
-
                   ElevatedButton(
-                    onPressed: _addStudent,
-                    child: const Text("Add details"),
-                  ),
+                      onPressed: _addStudent,
+                      child: const Text("Add Details")),
                 ],
               ),
             ),
-
             const SizedBox(height: 25),
 
-            /// -------- TABLE --------
-            if (students.isNotEmpty)
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: DataTable(
-                  columns: const [
-                    DataColumn(label: Text("Name")),
-                    DataColumn(label: Text("Age")),
-                    DataColumn(label: Text("Contact")),
-                    DataColumn(label: Text("Course")),
-                  ],
-                  rows: students
-                      .map(
-                        (student) => DataRow(
-                      cells: [
-                        DataCell(Text(student['name']!)),
-                        DataCell(Text(student['age']!)),
-                        DataCell(Text(student['contact']!)),
-                        DataCell(Text(student['course']!)),
-                      ],
-                    ),
-                  )
-                      .toList(),
+            /// Table
+            students.isNotEmpty
+                ? SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: DataTable(
+                columns: const [
+                  DataColumn(label: Text("Name")),
+                  DataColumn(label: Text("Age")),
+                  DataColumn(label: Text("Contact")),
+                  DataColumn(label: Text("Course")),
+                  DataColumn(label: Text("Action")),
+                ],
+                rows: List.generate(
+                  students.length,
+                      (index) => DataRow(
+                    cells: [
+                      DataCell(Text(students[index]['name']!)),
+                      DataCell(Text(students[index]['age']!)),
+                      DataCell(Text(students[index]['contact']!)),
+                      DataCell(Text(students[index]['course']!)),
+                      DataCell(
+                        IconButton(
+                          icon: const Icon(Icons.delete,
+                              color: Colors.red),
+                          onPressed: () => _deleteStudent(index),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              )
-            else
-              const Text(
-                "No data added yet",
-                style: TextStyle(color: Colors.grey),
               ),
+            )
+                : const Text("No data added yet",
+                style: TextStyle(color: Colors.grey)),
           ],
         ),
       ),

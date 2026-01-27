@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:carousel_slider/carousel_slider.dart';
-
-//import 'package:flutter/material.dart';
 import 'nevigator.dart';
+import 'package:carousel_slider/carousel_slider.dart';
 
 void main() {
   runApp(const MyApp());
@@ -11,15 +9,31 @@ void main() {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
+  // Global theme controller
+  static final ValueNotifier<ThemeMode> themeNotifier =
+  ValueNotifier(ThemeMode.light);
+
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.yellowAccent),
-      ),
-      home: const MyHomePage(title: 'My App'),
+    return ValueListenableBuilder<ThemeMode>(
+      valueListenable: themeNotifier,
+      builder: (_, ThemeMode currentMode, __) {
+        return MaterialApp(
+          debugShowCheckedModeBanner: false,
+          title: 'Flutter Demo',
+          theme: ThemeData(
+            brightness: Brightness.light,
+            colorScheme: ColorScheme.fromSeed(seedColor: Colors.yellowAccent),
+          ),
+          darkTheme: ThemeData(
+            brightness: Brightness.dark,
+            colorScheme: ColorScheme.fromSeed(
+                seedColor: Colors.yellowAccent, brightness: Brightness.dark),
+          ),
+          themeMode: currentMode,
+          home: const MyHomePage(title: 'My App'),
+        );
+      },
     );
   }
 }
@@ -41,30 +55,20 @@ class _MyHomePageState extends State<MyHomePage> {
     'assets/images/pri4.jpg',
   ];
 
-
   void _decrementCounter() {
-    if (_counter > 0) {
-      setState(() {
-        _counter--;
-      });
-    }
+    if (_counter > 0) setState(() => _counter--);
   }
-
 
   void _incrementCounter() {
-    setState(() {
-      _counter++;
-    });
+    setState(() => _counter++);
   }
-  /*
-*/
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         title: Text(widget.title),
+        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         actions: [
           IconButton(
             icon: const Icon(Icons.arrow_forward),
@@ -73,35 +77,42 @@ class _MyHomePageState extends State<MyHomePage> {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => const NextPage(),
+                  builder: (context) => NextPageWithTheme(
+                    themeModeNotifier: MyApp.themeNotifier,
+                  ),
                 ),
               );
             },
           ),
+          // Theme Toggle
+          IconButton(
+            icon: Icon(MyApp.themeNotifier.value == ThemeMode.light
+                ? Icons.dark_mode
+                : Icons.light_mode),
+            onPressed: () {
+              MyApp.themeNotifier.value =
+              MyApp.themeNotifier.value == ThemeMode.light
+                  ? ThemeMode.dark
+                  : ThemeMode.light;
+            },
+          ),
         ],
       ),
-
       body: Column(
-        mainAxisAlignment: MainAxisAlignment.start,
-        crossAxisAlignment: CrossAxisAlignment.center,// doubt part when i comment out then also same result showing
         children: [
-          const SizedBox(height: 30), // space from top
-
+          const SizedBox(height: 30),
           const SizedBox(
             width: double.infinity,
             child: Text(
               'Buddy you have pushed button',
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 18),//one-peace.jpg
+              style: TextStyle(fontSize: 18),
             ),
           ),
-
           Text(
             '$_counter',
             style: Theme.of(context).textTheme.headlineMedium,
           ),
-          // Centered Image
-          // Centered Image
           Expanded(
             child: Center(
               child: CarouselSlider(
@@ -125,18 +136,8 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
             ),
           ),
-
-
-
-
-
-          // Text(
-          //   '$_counter',
-          //   style: Theme.of(context).textTheme.headlineMedium,
-          // ),
         ],
       ),
-
       floatingActionButton: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -145,12 +146,15 @@ class _MyHomePageState extends State<MyHomePage> {
             child: FloatingActionButton(
               onPressed: _counter == 0 ? null : _decrementCounter,
               tooltip: 'Decrement',
+              backgroundColor:
+              _counter == 0 ? Colors.grey : Theme.of(context).primaryColor,
               child: const Icon(Icons.remove),
             ),
           ),
           FloatingActionButton(
             onPressed: _incrementCounter,
             tooltip: 'Increment',
+            backgroundColor: Theme.of(context).colorScheme.primary,
             child: const Icon(Icons.add),
           ),
         ],
