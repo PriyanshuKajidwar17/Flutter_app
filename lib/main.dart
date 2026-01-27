@@ -43,16 +43,21 @@ class _MyHomePageState extends State<MyHomePage> {
 
 
   void _decrementCounter() {
-    setState(() {
-      _counter--;
-    });
+    if (_counter > 0) {
+      setState(() {
+        _counter--;
+      });
+    }
   }
+
 
   void _incrementCounter() {
     setState(() {
       _counter++;
     });
   }
+  /*
+*/
 
   @override
   Widget build(BuildContext context) {
@@ -138,7 +143,7 @@ class _MyHomePageState extends State<MyHomePage> {
           Padding(
             padding: const EdgeInsets.only(left: 30),
             child: FloatingActionButton(
-              onPressed: _decrementCounter,
+              onPressed: _counter == 0 ? null : _decrementCounter,
               tooltip: 'Decrement',
               child: const Icon(Icons.remove),
             ),
