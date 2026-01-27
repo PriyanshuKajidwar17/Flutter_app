@@ -9,7 +9,6 @@ void main() {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // Global theme controller
   static final ValueNotifier<ThemeMode> themeNotifier =
   ValueNotifier(ThemeMode.light);
 
@@ -65,6 +64,9 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
+    final screenHeight = MediaQuery.of(context).size.height;
+    final carouselHeight = screenHeight * 0.35; // 35% of screen height
+
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.title),
@@ -84,7 +86,6 @@ class _MyHomePageState extends State<MyHomePage> {
               );
             },
           ),
-          // Theme Toggle
           IconButton(
             icon: Icon(MyApp.themeNotifier.value == ThemeMode.light
                 ? Icons.dark_mode
@@ -117,7 +118,7 @@ class _MyHomePageState extends State<MyHomePage> {
             child: Center(
               child: CarouselSlider(
                 options: CarouselOptions(
-                  height: 300,
+                  height: carouselHeight,
                   autoPlay: true,
                   autoPlayInterval: const Duration(seconds: 2),
                   enlargeCenterPage: true,
@@ -128,7 +129,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     borderRadius: BorderRadius.circular(15),
                     child: Image.asset(
                       imagePath,
-                      fit: BoxFit.cover,
+                      fit: BoxFit.contain, // changed from cover to contain
                       width: double.infinity,
                     ),
                   );
