@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class NextPageWithTheme extends StatefulWidget {
@@ -23,7 +24,7 @@ class _NextPageWithThemeState extends State<NextPageWithTheme> {
   @override
   void initState() {
     super.initState();
-    _loadStudents(); // Load saved data
+    _loadStudents();
   }
 
   Future<void> _saveStudents() async {
@@ -55,7 +56,9 @@ class _NextPageWithThemeState extends State<NextPageWithTheme> {
           'course': courseController.text,
         });
       });
+
       await _saveStudents();
+
       nameController.clear();
       ageController.clear();
       contactController.clear();
@@ -77,9 +80,11 @@ class _NextPageWithThemeState extends State<NextPageWithTheme> {
         title: const Text("Student Form"),
         actions: [
           IconButton(
-            icon: Icon(widget.themeModeNotifier.value == ThemeMode.light
-                ? Icons.dark_mode
-                : Icons.light_mode),
+            icon: Icon(
+              widget.themeModeNotifier.value == ThemeMode.light
+                  ? Icons.dark_mode
+                  : Icons.light_mode,
+            ),
             onPressed: () {
               widget.themeModeNotifier.value =
               widget.themeModeNotifier.value == ThemeMode.light
@@ -93,7 +98,7 @@ class _NextPageWithThemeState extends State<NextPageWithTheme> {
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            /// Header with Logo
+            /// Header
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -117,20 +122,23 @@ class _NextPageWithThemeState extends State<NextPageWithTheme> {
                   TextFormField(
                     controller: nameController,
                     decoration: const InputDecoration(
-                        labelText: "Student Name",
-                        border: OutlineInputBorder()),
+                      labelText: "Student Name",
+                      border: OutlineInputBorder(),
+                    ),
                     validator: (value) =>
                     value == null || value.length < 3
                         ? "Enter valid name"
                         : null,
                   ),
                   const SizedBox(height: 10),
+
                   TextFormField(
                     controller: ageController,
                     keyboardType: TextInputType.number,
                     decoration: const InputDecoration(
-                        labelText: "Age",
-                        border: OutlineInputBorder()),
+                      labelText: "Age",
+                      border: OutlineInputBorder(),
+                    ),
                     validator: (value) {
                       int? age = int.tryParse(value ?? "");
                       if (age == null || age < 1 || age > 100) {
@@ -140,32 +148,45 @@ class _NextPageWithThemeState extends State<NextPageWithTheme> {
                     },
                   ),
                   const SizedBox(height: 10),
+
+                  /// ✅ CONTACT NUMBER FIELD (FIXED)
                   TextFormField(
                     controller: contactController,
                     keyboardType: TextInputType.phone,
+                    inputFormatters: [
+                      FilteringTextInputFormatter.digitsOnly,
+                      LengthLimitingTextInputFormatter(10),
+                    ],
                     decoration: const InputDecoration(
-                        labelText: "Contact Number",
-                        border: OutlineInputBorder()),
-                    validator: (value) =>
-                    value == null || value.length != 10
-                        ? "Enter 10 digit number"
-                        : null,
+                      labelText: "Contact Number",
+                      border: OutlineInputBorder(),
+                    ),
+                    validator: (value) {
+                      if (value == null || value.length != 10) {
+                        return "Enter 10 digit number";
+                      }
+                      return null;
+                    },
                   ),
                   const SizedBox(height: 10),
+
                   TextFormField(
                     controller: courseController,
                     decoration: const InputDecoration(
-                        labelText: "Course Name",
-                        border: OutlineInputBorder()),
+                      labelText: "Course Name",
+                      border: OutlineInputBorder(),
+                    ),
                     validator: (value) =>
                     value == null || value.isEmpty
                         ? "Course required"
                         : null,
                   ),
                   const SizedBox(height: 15),
+
                   ElevatedButton(
-                      onPressed: _addStudent,
-                      child: const Text("Add Details")),
+                    onPressed: _addStudent,
+                    child: const Text("Add Details"),
+                  ),
                 ],
               ),
             ),
@@ -193,8 +214,10 @@ class _NextPageWithThemeState extends State<NextPageWithTheme> {
                       DataCell(Text(students[index]['course']!)),
                       DataCell(
                         IconButton(
-                          icon: const Icon(Icons.delete,
-                              color: Colors.red),
+                          icon: const Icon(
+                            Icons.delete,
+                            color: Colors.red,
+                          ),
                           onPressed: () => _deleteStudent(index),
                         ),
                       ),
@@ -203,8 +226,10 @@ class _NextPageWithThemeState extends State<NextPageWithTheme> {
                 ),
               ),
             )
-                : const Text("No data added yet",
-                style: TextStyle(color: Colors.grey)),
+                : const Text(
+              "No data added yet",
+              style: TextStyle(color: Colors.grey),
+            ),
           ],
         ),
       ),
