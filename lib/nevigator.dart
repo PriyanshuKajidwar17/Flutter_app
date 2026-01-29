@@ -98,7 +98,6 @@ class _NextPageWithThemeState extends State<NextPageWithTheme> {
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            /// Header
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -106,15 +105,11 @@ class _NextPageWithThemeState extends State<NextPageWithTheme> {
                   "Add Student Details",
                   style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
                 ),
-                Image.asset(
-                  'assets/images/students.png',
-                  height: 45,
-                ),
+                Image.asset('assets/images/students.png', height: 45),
               ],
             ),
             const SizedBox(height: 16),
 
-            /// Form
             Form(
               key: _formKey,
               child: Column(
@@ -149,7 +144,6 @@ class _NextPageWithThemeState extends State<NextPageWithTheme> {
                   ),
                   const SizedBox(height: 10),
 
-                  /// ✅ CONTACT NUMBER FIELD (FIXED)
                   TextFormField(
                     controller: contactController,
                     keyboardType: TextInputType.phone,
@@ -161,12 +155,10 @@ class _NextPageWithThemeState extends State<NextPageWithTheme> {
                       labelText: "Contact Number",
                       border: OutlineInputBorder(),
                     ),
-                    validator: (value) {
-                      if (value == null || value.length != 10) {
-                        return "Enter 10 digit number";
-                      }
-                      return null;
-                    },
+                    validator: (value) =>
+                    value == null || value.length != 10
+                        ? "Enter 10 digit number"
+                        : null,
                   ),
                   const SizedBox(height: 10),
 
@@ -192,7 +184,6 @@ class _NextPageWithThemeState extends State<NextPageWithTheme> {
             ),
             const SizedBox(height: 25),
 
-            /// Table
             students.isNotEmpty
                 ? SingleChildScrollView(
               scrollDirection: Axis.horizontal,
@@ -206,23 +197,18 @@ class _NextPageWithThemeState extends State<NextPageWithTheme> {
                 ],
                 rows: List.generate(
                   students.length,
-                      (index) => DataRow(
-                    cells: [
-                      DataCell(Text(students[index]['name']!)),
-                      DataCell(Text(students[index]['age']!)),
-                      DataCell(Text(students[index]['contact']!)),
-                      DataCell(Text(students[index]['course']!)),
-                      DataCell(
-                        IconButton(
-                          icon: const Icon(
-                            Icons.delete,
-                            color: Colors.red,
-                          ),
-                          onPressed: () => _deleteStudent(index),
-                        ),
+                      (index) => DataRow(cells: [
+                    DataCell(Text(students[index]['name']!)),
+                    DataCell(Text(students[index]['age']!)),
+                    DataCell(Text(students[index]['contact']!)),
+                    DataCell(Text(students[index]['course']!)),
+                    DataCell(
+                      IconButton(
+                        icon: const Icon(Icons.delete, color: Colors.red),
+                        onPressed: () => _deleteStudent(index),
                       ),
-                    ],
-                  ),
+                    ),
+                  ]),
                 ),
               ),
             )
